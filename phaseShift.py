@@ -96,7 +96,7 @@ class PhaseShift(object):
         # =============================================================================
         # Plot result
         # =============================================================================
-        fig=plt.figure(figsize=(6,8),tight_layout=True)
+        fig=plt.figure(figsize=(10,14))
         # Plot Trace
         ax = fig.add_subplot(211)
         xtick = []
@@ -120,7 +120,7 @@ class PhaseShift(object):
         ax2.set_ylabel('Phase Velocity (m/s)')
         plt.contourf(fgrid, vgrid, V,50, cmap='jet')
         plt.title('Dispersion Curve')
-        fig.savefig('PhaseShift.png',bbox_inches="tight",dpi=fig.dpi)
+        fig.savefig('PhaseShift.png',bbox_inches="tight",dpi=100)
         return
     
 
