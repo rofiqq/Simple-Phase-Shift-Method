@@ -2,7 +2,6 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-
 class PhaseShift(object):
     def __init__(self, filename, freq, vr, xo, dx, dt):
         """
@@ -121,12 +120,46 @@ class PhaseShift(object):
         plt.contourf(fgrid, vgrid, V,50, cmap='jet')
         plt.title('Dispersion Curve')
         fig.savefig('PhaseShift.png',bbox_inches="tight",dpi=100)
+        plt.close()
+        return fgrid, vgrid, V
+   
+class LineBuilder:
+    def __init__(self, line, output):
+        self.output = output
+        self.line = line
+        self.xs = list(line.get_xdata())
+        self.ys = list(line.get_ydata())
+        self.cid = line.figure.canvas.mpl_connect('button_press_event', self)
+
+    def __call__(self, event):
+        if event.inaxes!=self.line.axes: 
+            return 
+        if event.button == 1 :
+            self.xs.append(event.xdata)
+            self.ys.append(event.ydata)
+            self.line.set_data(self.xs, self.ys)
+            self.line.figure.canvas.draw()    
+            #print 'freq : {:.3f} Vphase : {:.2f}'.format(event.xdata, event.ydata)
+        elif event.button == 3:
+            del self.xs[len(self.xs)-1]
+            del self.ys[len(self.ys)-1]
+            self.line.set_data(self.xs, self.ys)
+            self.line.figure.canvas.draw()
+            #print 'DELETE freq : {:.3f} Vphase : {:.2f}'.format(event.xdata, event.ydata)
+        else :
+            np.savetxt('output_'+self.output,np.array([self.xs, self.ys]).T, fmt='%.3f')
+            plt.close(fig)
+            print 'SAVE TO', 'output_'+self.output
         return
-    
-
-def main():
-    PS = PhaseShift('example.txt',(0,50),(10,1000,5),12,2,0.001)
-    PS.run()
-
-if __name__ == "__main__":
-  main()
+            
+filename = 'example.txt'
+fgrid, vgrid, V = PhaseShift(filename,(0,50),(10,1000,5),12,2,0.001).run()
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Phase Velocity (m/s)')
+plt.contourf(fgrid, vgrid, V,50, cmap='jet')
+ax.set_title('$\it{Left Click}$ to PICK | $\it{Right Click}$ to UNDO | $\it{Scroll Click}$ to SAVE & EXIT',
+             fontsize=10)
+line, = ax.plot([], [],'o-')  # empty line
+linebuilder = LineBuilder(line,filename)
